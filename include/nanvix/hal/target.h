@@ -2,6 +2,7 @@
  * MIT License
  *
  * Copyright(c) 2018 Pedro Henrique Penna <pedrohenriquepenna@gmail.com>
+ *              2018 Davidson Francis     <davidsondfgl@gmail.com>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -31,6 +32,10 @@
 
 	#if (defined(__i386__) && (__pc__))
 	#include <target/ibm/pc.h>
+	#endif
+	
+	#if (defined(__or1k__) && (__pc__))
+	#include <target/or1k/pc.h>
 	#endif
 
 /*============================================================================*
@@ -62,18 +67,6 @@
 	#endif
 
 /*============================================================================*
- * Clock Device Interface                                                     *
- *============================================================================*/
-
-	#ifndef HAL_INT_CLOCK
-	#error "HAL_INT_CLOCK not defined"
-	#endif
-
-	#ifndef __hal_clock_init
-	#error "hal_clock_init() not defined?"
-	#endif
-
-/*============================================================================*
  * Debug Interface                                                            *
  *============================================================================*/
 
@@ -83,74 +76,6 @@
 
 	#ifndef __hal_stdout_write
 	#error "hal_stdout_write() not defined?"
-	#endif
-
-/*============================================================================*
- * Interrupt Interface                                                        *
- *============================================================================*/
-
-	#ifndef _HAL_INT_NR
-	#error "_HAL_INT_NR not defined"
-	#endif
-
-	#ifndef __hal_disable_interrupts
-	#error "hal_disable_interrupts() not defined?"
-	#endif
-
-	#ifndef __hal_enable_interrupts
-	#error "hal_enable_interrupts() not defined?"
-	#endif
-
-	#ifndef __hal_interrupt_mask
-	#error "hal_interrupt_mask() not defined?"
-	#endif
-
-	#ifndef __hal_interrupt_unmask
-	#error "hal_interrupt_unmask() not defined?"
-	#endif
-
-	#ifndef __hal_interrupt_ack
-	#error "hal_interrupt_ack() not defined?"
-	#endif
-
-	#ifndef __hal_interrupt_set_handler
-	#error "hal_interrupt_set_handler() not defined?"
-	#endif
-
-	#ifndef __hal_intlvl_set
-	#error "hal_intlvl_set() not defined?"
-	#endif
-
-/*============================================================================*
- * Exception Interface                                                        *
- *============================================================================*/
-
-	#ifndef _HAL_NUM_EXCEPTION
-	#error "_HAL_NUM_EXCEPTION not defined"
-	#endif
-
-	#ifndef __hal_exception_set_handler
-	#error "hal_exception_set_handler() not defined?"
-	#endif
-
-/*============================================================================*
- * Input/Output Interface                                                     *
- *============================================================================*/
-
-	#ifndef __hal_outputb
-	#error "hal_outputb() not defined?"
-	#endif
-
-	#ifndef __hal_iowait
-	#error "hal_iowait() not defined?"
-	#endif
-
-/*============================================================================*
- * Memory Cache Interface                                                     *
- *============================================================================*/
-
-	#ifndef __hal_dcache_invalidate
-	#error "hal_dcache_invalidate() not defined?"
 	#endif
 
 /*============================================================================*
@@ -315,14 +240,6 @@
 
 	#ifndef __pte_write_set_fn
 	#error "pte_write_set() not defined?"
-	#endif
-
-/*============================================================================*
- * TLB Interface                                                              *
- *============================================================================*/
-
-	#ifndef __tlb_flush_fn
-	#error "tlb_flush() not defined?"
 	#endif
 
 #endif /* NANVIX_HAL_TARGET_H_ */
