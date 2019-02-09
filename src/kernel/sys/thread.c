@@ -25,6 +25,7 @@
 #include <nanvix/const.h>
 #include <nanvix/mm.h>
 #include <nanvix/thread.h>
+#include <errno.h>
 
 /**
  * @see thread_get_id().
