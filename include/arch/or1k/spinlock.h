@@ -146,10 +146,10 @@
 
 		__asm__ __volatile__
 		(
-			".unlock:\n"
+			"1:\n"
 			"	l.lwa r7, 0(r5)\n"
 			"	l.swa 0(r5), r0\n"
-			"	l.bnf .unlock\n"
+			"	l.bnf 1b\n"
 			"	l.nop\n"
 			:
 			: "r" (lock_reg)
