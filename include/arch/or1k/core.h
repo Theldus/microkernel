@@ -147,10 +147,13 @@
 	 * underlying core and places it in a halt state. An enabled
 	 * hardware interrupt, NMI, or a reset resumes execution.
 	 */
-	static inline void or1k_hlt(void)
-	{
-	}
-	
+	EXTERN void or1k_core_hlt(void);
+
+	/**
+	 * @brief Suspends instruction execution in the underlying core.
+	 */
+	EXTERN void or1k_core_sleep(void);
+
 	/**
 	 * @brief Wakes up a core.
 	 *
@@ -159,9 +162,41 @@
 	EXTERN void or1k_core_wakeup(int coreid);
 
 	/**
-	 * @brief Suspends instruction execution in the underlying core.
+	 * @brief Starts a core.
+	 *
+	 * @param coreid ID of the target core.
+	 * @param start  Starting routine to execute.
 	 */
-	EXTERN void or1k_core_sleep(void);
+	EXTERN void or1k_core_start(int coreid, void (*start)(void));
+
+	/**
+	 * @brief Shutdowns the underlying core.
+	 *
+	 * @param status Shutdown status.
+	 */
+	EXTERN void or1k_core_shutdown(int status);	
+
+	/**
+	 * @brief Initializes the underlying core.
+	 */
+	EXTERN void or1k_core_setup(void);
+
+	/**
+	 * @brief Resets the underlying core.
+	 *
+	 * The or1k_core_reset() function resets execution instruction in
+	 * the underlying core by reseting the kernel stack to its initial
+	 * location and relaunching the or1k_slave_setup() function.
+	 *
+	 * @note This function does not return.
+	 * @note For the implementation of this function check out
+	 * assembly source files.
+	 *
+	 * @see or1k_slave_setup()
+	 *
+	 * @author Davidson Francis
+	 */
+	EXTERN void or1k_core_reset(void);
 	
 /*============================================================================*
  *                              Exported Interface                            *
@@ -181,6 +216,7 @@
 	#define __core_sleep    /**< core_sleep()    */
 	#define __core_wakeup   /**< core_wakeup()   */
 	#define __core_start    /**< core_start()    */
+	#define __core_reset    /**< core_reset()    */
 	/**@}*/
 	
 /**
@@ -204,7 +240,7 @@
 	 */
 	static inline void core_halt(void)
 	{
-		or1k_hlt();
+		or1k_core_hlt();
 	}
 	
 	/**
@@ -222,6 +258,30 @@
 	{
 		or1k_core_wakeup(coreid);
 	}
+
+	/**
+	 * @see or1k_core_start().
+	 */
+	static inline void core_start(int coreid, void (*start)(void))
+	{
+		or1k_core_start(coreid, start);
+	}
+
+	/**
+	 * @see or1k_core_shutdown().
+	 */
+	static inline void core_shutdown(int status)
+	{
+		or1k_core_shutdown(status);
+	}
+
+	/**
+	 * @see or1k_core_reset().
+	 */
+	static inline void core_reset(void)
+	{
+		or1k_core_reset();
+	}	
 
 /**@}*/
 
