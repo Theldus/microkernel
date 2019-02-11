@@ -44,7 +44,7 @@ kthread_t kthread_self(void)
 /*
  * @see sys_kthread_create()
  */
-kthread_t kthread_create(
+int kthread_create(
 	kthread_t *tid,
 	void *(*start)(void*),
 	void *arg
@@ -64,9 +64,11 @@ kthread_t kthread_create(
 /*
  * @see sys_kthread_exit().
  */
-void kthread_exit(void *retval)
+int kthread_exit(void *retval)
 {
 	((void) retval);
+	
+	return (-1);
 }
 
 /*============================================================================*
