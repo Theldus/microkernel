@@ -48,7 +48,7 @@
 .globl idle_pgdir
 .globl dtlb_table
 .globl itlb_table
-.globl core0.kstack
+.globl core.kstack
 
 /*============================================================================*
  *                              bootstrap section                             *
@@ -68,6 +68,12 @@ start:
 	/* Supervisor mode. */
 	l.ori	r1, r0, 0x1
 	l.mtspr	r0, r1, OR1K_SPR_SR
+
+	/* Check current core. */
+	l.mfspr r1, r0, OR1K_SPR_COREID
+	l.sfnei r1, 0
+	l.bf start.secondary_cores
+	l.nop
 
 	/* Build kernel and kernel pool page tables. */
 	OR1K_LOAD_SYMBOL_2_GPR(r1, kpool_pgtab)
@@ -102,34 +108,45 @@ start:
 	l.ori  r1, r1, OR1K_PT_PRESENT
 	l.sw  OR1K_PTE_SIZE*193(r3), r1
 
-	/* Setup stack. */
-	OR1K_LOAD_SYMBOL_2_GPR(r1, core0.kstack)
-	l.addi r1, r1,  OR1K_PAGE_SIZE
-	l.addi r1, r1, -DWORD_SIZE  /* Stack pointer. */
-	l.or   r2, r1,  r0          /* Frame pointer. */
+	start.secondary_cores:
 
-	/* Flush TLB. */
-	l.jal _boot_tlb_flush
-	l.nop
+		/* Setup stack. */
+		OR1K_LOAD_SYMBOL_2_GPR(r1, core.kstack)
+		l.mfspr r3, r0, OR1K_SPR_COREID
+		l.addi  r3, r3, 1
+		l.slli  r3, r3, OR1K_PAGE_SHIFT
+		l.add   r1, r1, r3
+		l.addi  r1, r1, -DWORD_SIZE /* Stack pointer. */
+		l.or    r2, r1, r0          /* Frame pointer. */
 
-	/* Setup or1k. */
-	OR1K_LOAD_SYMBOL_2_GPR(r3, or1k_core_setup)
-	l.jalr r3
-	l.nop
+		/* Flush TLB. */
+		l.jal _boot_tlb_flush
+		l.nop
 
-	/* Enabling IMMU/DMMU */
-	l.jal _enable_mmu
-	l.nop
+		l.mfspr r3, r0, OR1K_SPR_COREID
+		l.sfnei r3, 0
+		l.bf start.secondary_cores.slave
+		l.nop
 
-	/* kmain. */
-	OR1K_LOAD_SYMBOL_2_GPR(r3, kmain)
-	l.jalr r3
-	l.nop
+		/* Setup master. */
+		OR1K_LOAD_SYMBOL_2_GPR(r3, or1k_master_setup)
+		l.jalr r3
+		l.nop
 
-	/* Halt execution. */
-	start.halt:
 		l.j start.halt
 		l.nop
+
+		start.secondary_cores.slave:
+
+			/* Setup slave. */
+			OR1K_LOAD_SYMBOL_2_GPR(r3, or1k_slave_setup)
+			l.jalr r3
+			l.nop
+	
+		/* Halt execution. */
+		start.halt:
+			l.j start.halt
+			l.nop
 
 /*----------------------------------------------------------------------------*
  * _boot_tlb_flush()                                                          *

@@ -30,7 +30,7 @@
 .globl idle_pgdir
 .globl dtlb_table
 .globl itlb_table
-.globl core0.kstack
+.globl core.kstack
 
 .section .data
 /*----------------------------------------------------------------------------*
@@ -89,12 +89,12 @@ itlb_table:
 	.fill 64, DWORD_SIZE, 0
 
 /*----------------------------------------------------------------------------*
- * core0.kstack                                                               *
+ * core.kstack                                                                *
  *----------------------------------------------------------------------------*/
 
 /**
- * @brief Kernel stack for core 0.
+ * @brief Kernel stack for all cores.
  */
 .align OR1K_PAGE_SIZE
-core0.kstack:
-	.fill OR1K_PAGE_SIZE/OR1K_PTE_SIZE, OR1K_PTE_SIZE, 0
+core.kstack:
+	.fill (OR1K_PAGE_SIZE/OR1K_PTE_SIZE)*OR1K_NUM_CORES, OR1K_PTE_SIZE, 0

@@ -28,67 +28,51 @@
 #include <nanvix/klib.h>
 #include <nanvix/const.h>
 
-/* Import definitions from low-level code. */
-EXTERN struct pde idle_pgdir[];
-
-/**
- * @brief Handles a TLB fault.
- *
- * The or1k_do_tlb_fault() function handles a early TLB faults. It
- * checks the current page directory for a virtual-to-physical address
- * mapping, and if it finds one, it writes this mapping to the TLB. If
- * the faulting address is not currently mapped in the current page
- * directory, it panics the kernel.
- *
- * @param excp Exception information.
- * @param ctx  Interrupted execution context.
- *
- * @author Davidson Francis
- * @author Pedro Henrique Penna
- */
-PRIVATE void or1k_do_tlb_fault(
-	const struct exception *excp,
-	const struct context *ctx
-)
-{
-	paddr_t paddr;     /* Physical address.               */
-	vaddr_t vaddr;     /* Faulting address.               */
-	struct pte *pte;   /* Working page table table entry. */
-	struct pde *pde;   /* Working page directory entry.   */
-	struct pte *pgtab; /* Working page table.             */
-
-	UNUSED(ctx);
-
-	/* Get page address of faulting address. */
-	vaddr = or1k_excp_get_addr(excp);
-	vaddr &= OR1K_PAGE_MASK;
-
-	/* Lookup PDE. */
-	pde = pde_get(idle_pgdir, vaddr);
-	if (!pde_is_present(pde))
-		kpanic("[hal] page fault at %x", exception_get_addr(excp));
-
-	/* Lookup PTE. */
-	pgtab = (struct pte *)(pde_frame_get(pde) << OR1K_PAGE_SHIFT);
-	pte = pte_get(pgtab, vaddr);
-	if (!pte_is_present(pte))
-		kpanic("[hal] page fault at %x", exception_get_addr(excp));
-
-	/* Writing mapping to TLB. */
-	paddr = pte_frame_get(pte) << OR1K_PAGE_SHIFT;
-	if (or1k_tlb_write(excp->num, vaddr, paddr) < 0)
-		kpanic("[hal] cannot write to tlb");
-}
-
 /**
  * Initializes the core components for or1k.
  */
 PUBLIC void or1k_core_setup(void)
 {
-	/* TLB Handler. */
-	exception_set_handler(EXCP_DTLB_FAULT, or1k_do_tlb_fault);
-	exception_set_handler(EXCP_ITLB_FAULT, or1k_do_tlb_fault);
+	/* Enable MMU. */
+	or1k_mmu_setup();
+}
 
-	/* Initial TLB. */
-	or1k_tlb_init();
+/**
+ * @brief Initializes a slave core.
+ *
+ * The or1k_slave_setup() function initializes the underlying slave
+ * core.  It setups the stack and then call the kernel main function.
+ * Architectural structures are initialized by the master core and
+ * registered later on, when the slave core is started effectively.
+ *
+ * @note This function does not return.
+ *
+ * @see or1k_core_setup() and or1k_master_setup().
+ *
+ * @author Davidson Francis
+ */
+PUBLIC NORETURN void or1k_slave_setup(void)
+{
+	while (TRUE)
+		/* noop(). */;
+}
+
+/**
+ * @brief Initializes the master core.
+ *
+ * The or1k_master_setup() function initializes the underlying
+ * master core. It setups the stack and then call the kernel
+ * main function.
+ *
+ * @note This function does not return.
+ *
+ * @author Davidson Francis
+ */
+PUBLIC NORETURN void or1k_master_setup(void)
+{
+	/* Core setup. */
+	or1k_core_setup();
+
+	/* Kernel main. */
+	kmain(NULL, NULL);
 }
